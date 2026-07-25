@@ -658,15 +658,20 @@ void TextListComponent<T>::updateCameraOffset()
 	auto rowHeight = getRowHeight();
 	auto totalHeight = rowHeight * mEntries.size();
 
-	// move the camera to scroll
+	// move the camera to scroll, snapping to whole rows so the centered entry
+	// stays centered and no row is ever partially cut off at the top or bottom
 	if (totalHeight > mSize.y() && mCursor < mEntries.size())
 	{
-		mCameraOffset = (rowHeight * mCursor) + ((rowHeight - mSize.y()) / 2.0f);
+		int visibleRows = mLineCount > 0 ? mLineCount : (int)(mSize.y() / rowHeight);
+		int maxTopEntry = Math::max(0, (int)mEntries.size() - visibleRows);
+		int topEntry = (int)mCursor - (visibleRows / 2);
 
-		if (mCameraOffset < 0)
-			mCameraOffset = 0;
-		else if (mCameraOffset + mSize.y() > totalHeight)
-			mCameraOffset = totalHeight - mSize.y();
+		if (topEntry < 0)
+			topEntry = 0;
+		else if (topEntry > maxTopEntry)
+			topEntry = maxTopEntry;
+
+		mCameraOffset = topEntry * rowHeight;
 	}
 	else
 		mCameraOffset = 0;
