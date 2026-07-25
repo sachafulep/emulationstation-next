@@ -1,0 +1,21 @@
+FROM archlinux:base-devel
+
+RUN pacman -Syu --noconfirm \
+    cmake git unzip sdl2 sdl2_mixer rapidjson \
+    boost boost-libs curl freetype2 mesa alsa-lib vlc \
+    && pacman -Scc --noconfirm
+
+# FreeImage was dropped from the AUR; build it from upstream source instead.
+# Its bundled 2018-era vendored code needs an older C/C++ mode to compile under modern GCC
+# (dynamic exception specs removed in C++17; implicit-function-declaration is now an error in C).
+RUN curl -sL "https://sourceforge.net/projects/freeimage/files/Source%20Distribution/3.18.0/FreeImage3180.zip/download" -o /tmp/FreeImage.zip \
+    && unzip -q /tmp/FreeImage.zip -d /tmp \
+    && export CXXFLAGS="-O3 -fPIC -fexceptions -fvisibility=hidden -Wno-ctor-dtor-privacy -std=gnu++14" \
+    && export CFLAGS="-O3 -fPIC -fexceptions -fvisibility=hidden -std=gnu89 -Wno-implicit-function-declaration" \
+    && make -C /tmp/FreeImage -f Makefile.gnu -j$(nproc) \
+    && make -C /tmp/FreeImage -f Makefile.gnu install \
+    && rm -rf /tmp/FreeImage.zip /tmp/FreeImage
+
+WORKDIR /src
+
+CMD ["/bin/bash"]

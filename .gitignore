@@ -60,3 +60,8 @@ CPackSourceConfig.cmake
 # backup files
 *.orig
 *.rej
+
+# local dev/test fixtures (ROMs, scratch configs) - not part of the project
+/roms/
+/es_systems.cfg
+/.emulationstation-home/
