@@ -407,6 +407,15 @@ namespace Utils
 			return text;
 		}
 
+		std::string toCapitalized(const std::string& _string)
+		{
+			if (_string.empty())
+				return _string;
+
+			size_t firstCharEnd = nextCursor(_string, 0);
+			return toUpper(_string.substr(0, firstCharEnd)) + _string.substr(firstCharEnd);
+		}
+
 		std::string trim(const std::string& _string)
 		{
 			const size_t strBegin = _string.find_first_not_of(" \t\r\n");

@@ -74,6 +74,11 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SliderComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RectangleComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillChipComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillRowComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillHelpBarComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillListStyle.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillMetrics.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextEditComponent.h
@@ -205,7 +210,10 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollableContainer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SliderComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RectangleComponent.cpp		
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RectangleComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillChipComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillRowComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillHelpBarComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextEditComponent.cpp

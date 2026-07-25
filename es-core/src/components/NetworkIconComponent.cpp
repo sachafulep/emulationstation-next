@@ -4,6 +4,7 @@
 #include "IExternalActivity.h"
 
 #include "watchers/NetworkStateWatcher.h"
+#include "ImageIO.h"
 
 NetworkIconComponent::NetworkIconComponent(Window* window) : ImageComponent(window), mConnected(false), mPlaneMode(false), mDirty(true)
 {	
@@ -53,7 +54,18 @@ void NetworkIconComponent::update(int deltaTime)
 			if (planemodeEnabled && !mPlanemodeIcon.empty())
 				txName = mPlanemodeIcon;
 
-			setImage(txName);
+			// Pass an explicit max size instead of relying on ImageComponent's automatic
+			// detection, which only kicks in above 32px - below that it silently falls back to
+			// the SVG's native declared size and renders blurry (or, if the native size is
+			// larger than intended, oversized) when scaled to fit the icon's actual box.
+			setImage(txName, false, MaxSizeInfo(getSize().x(), getSize().y()));
+
+			// ImageComponent::setSize() only records the target size (used by later resizes)
+			// once a texture is actually assigned. Whoever called setSize() on us before our
+			// first image was ever set (the normal case) had that call silently no-op on that
+			// front, so the icon would otherwise fall back to its raw SVG's native pixel size
+			// once loaded. Re-assert now that we have a texture.
+			setSize(getSize().x(), getSize().y());
 		}
 
 		mDirty = false;

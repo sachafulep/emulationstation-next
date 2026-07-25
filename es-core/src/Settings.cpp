@@ -242,6 +242,7 @@ void Settings::setDefaults()
 	mStringMap["subset.status-bar"] = "on";
 	mStringMap["ScreenSaverBehavior"] = "black";
 	mStringMap["GamelistViewStyle"] = "automatic";
+	mStringMap["SystemViewStyle"] = "carousel";
 
 	mStringMap["Scraper"] = "ScreenScraper";
 	mStringMap["ScrapperImageSrc"] = "ss";

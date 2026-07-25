@@ -9,6 +9,7 @@
 #include "Sound.h"
 #include <memory>
 #include "components/ScrollbarComponent.h"
+#include "components/RectangleComponent.h"
 #include "Settings.h"
 #include "Window.h"
 #include "InputManager.h"
@@ -110,6 +111,26 @@ public:
 	inline void setLineSpacing(float lineSpacing) { mLineSpacing = lineSpacing; }
 	inline void setBonusTextColor(unsigned int color) { mBonusColor = color; mHasBonusColor = true; }
 	inline void setBonusSelectedTextColor(unsigned int color) { mBonusSelectedColor = color; mHasBonusSelectedColor = true; }
+	inline void setHorizontalMargin(float margin) { mHorizontalMargin = margin; }
+
+	// Draws the cursor row's selector as a fully-rounded pill sized to fit the row's text
+	// (radius = half the pill height), instead of a full-width bar.
+	inline void setSelectorPillMode(bool enabled, unsigned int pillColor = 0xFFFFFFFF)
+	{
+		mSelectorPillMode = enabled;
+		mSelectorPillColor = pillColor;
+	}
+
+	// Overrides the selector pill's auto-fit-to-text height with a fixed one (e.g. to match
+	// other pills elsewhere on screen). Pass a value < 0 to go back to auto-fitting.
+	inline void setSelectorPillHeight(float height) { mSelectorPillHeight = height; }
+
+	// Debug aid: draws an outline around every row's bounds so spacing/sizing can be tuned.
+	inline void setDebugShowRowBounds(bool enabled, unsigned int color = 0xFF0000FF)
+	{
+		mDebugShowRowBounds = enabled;
+		mDebugRowBoundsColor = color;
+	}
 
 	void onSizeChanged() override;
 
@@ -173,6 +194,14 @@ private:
 
 	ImageComponent mSelectorImage;
 
+	bool mSelectorPillMode;
+	unsigned int mSelectorPillColor;
+	float mSelectorPillHeight; // < 0 = auto-fit to text height
+	RectangleComponent mSelectorPill;
+
+	bool mDebugShowRowBounds;
+	unsigned int mDebugRowBoundsColor;
+
 	ScrollbarComponent mScrollbar;
 	float mCameraOffset;
 
@@ -202,8 +231,16 @@ private:
 
 template <typename T>
 TextListComponent<T>::TextListComponent(Window* window) :
-	IList<TextListData, T>(window), mSelectorImage(window), mScrollbar(window)
+	IList<TextListData, T>(window), mSelectorImage(window), mScrollbar(window), mSelectorPill(window)
 {
+	mSelectorPillMode = false;
+	mSelectorPillColor = 0xFFFFFFFF;
+	mSelectorPillHeight = -1.0f;
+	mDebugShowRowBounds = false;
+	mDebugRowBoundsColor = 0xFF0000FF;
+	mSelectorPill.setBorderSize(0.0f);
+	mSelectorPill.setRoundCorners(0.5f);
+
 	mCameraOffset = 0;
 	mLineCount = -1;
 	mMarqueeOffset = 0;
@@ -356,7 +393,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 
 			Vector3f offset(0, y, 0);
 
-			if (mLineCount > 0) // Vertical center
+			if (mLineCount > 0 || mSelectorPillMode) // Vertical center
 				offset[1] += (int)((entrySize - entry.data.textCache->metrics.size.y()) / 2);
 
 			switch (mAlignment)
@@ -395,7 +432,29 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 
 			if (mCursor == i)
 			{
-				if (mSelectorImage.hasImage())
+				if (mSelectorPillMode)
+				{
+					float padH = mFont->getSize() * 0.6f;
+					float padV = mFont->getSize() * 0.03f;
+
+					float pillW = entry.data.textCache->metrics.size.x() + padH * 2.0f;
+					float pillH = mSelectorPillHeight >= 0.0f ? mSelectorPillHeight : entry.data.textCache->metrics.size.y() + padV * 2.0f;
+
+					float pillX = offset[0] - padH;
+					float pillY = y + mSelectorOffsetY + (entrySize - pillH) / 2.0f;
+
+					mSelectorPill.setColor(mSelectorPillColor);
+					mSelectorPill.setSize(pillW, pillH);
+					mSelectorPill.setPosition(pillX, pillY);
+
+					// The pill intentionally extends past the text bounds for padding, so it
+					// shouldn't be clipped by the list's own content clip rect - suspend
+					// clipping for just this one draw call.
+					Renderer::popClipRect();
+					mSelectorPill.render(trans);
+					Renderer::pushClipRect(rect);
+				}
+				else if (mSelectorImage.hasImage())
 				{
 					//mSelectorImage.setPosition(0.f, y, 0.f);
 					mSelectorImage.setPosition(0.f, y + mSelectorOffsetY, 0.f);
@@ -432,6 +491,12 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 
 				font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, getOpacity());
 			}
+		}
+
+		if (mDebugShowRowBounds)
+		{
+			Renderer::setMatrix(trans);
+			Renderer::drawSolidRectangle(0.0f, y, mSize.x(), entrySize, 0x00000000, mDebugRowBoundsColor, 1.0f, 0.0f);
 		}
 
 		y += entrySize;

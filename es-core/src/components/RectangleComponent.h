@@ -24,6 +24,12 @@ public:
 	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
 	void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value) override;
 
+	inline void setColor(unsigned int color) { mColor = color; }
+	inline void setBorderColor(unsigned int color) { mBorderColor = color; }
+	inline void setBorderSize(float size) { mBorderSize = size; }
+	// < 1.0 is a fraction of the rectangle's height (e.g. 0.5 = fully-rounded pill ends), otherwise raw pixels.
+	inline void setRoundCorners(float value) { mRoundCorners = value; }
+
 private:
 	unsigned int mColor;
 	unsigned int mBorderColor;

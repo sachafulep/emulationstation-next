@@ -1,6 +1,7 @@
 #include "components/BatteryIconComponent.h"
 #include "Settings.h"
 #include "watchers/BatteryLevelWatcher.h"
+#include "ImageIO.h"
 
 BatteryIconComponent::BatteryIconComponent(Window* window) : ImageComponent(window), mDirty(true)
 {	
@@ -66,7 +67,17 @@ void BatteryIconComponent::update(int deltaTime)
 		else
 			txName = mEmpty;
 
-		setImage(txName);
+		// Pass an explicit max size instead of relying on ImageComponent's automatic detection,
+		// which only kicks in above 32px - below that it silently falls back to the SVG's tiny
+		// native declared size and renders blurry when scaled up to fit a smaller icon box.
+		setImage(txName, false, MaxSizeInfo(getSize().x(), getSize().y()));
+
+		// ImageComponent::setSize() only records the target size (used by later resizes) once a
+		// texture is actually assigned. Whoever called setSize() on us before our first image was
+		// ever set (the normal case - callers size a component before it has anything to show)
+		// had that call silently no-op on that front, so the icon would otherwise fall back to
+		// its raw SVG's native pixel size once loaded. Re-assert now that we have a texture.
+		setSize(getSize().x(), getSize().y());
 	}
 
 	mDirty = false;

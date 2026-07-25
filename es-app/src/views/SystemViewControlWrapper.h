@@ -46,6 +46,11 @@ public:
 		return mGrid;
 	}
 
+	TextListComponent<SystemData*>* asTextList()
+	{
+		return mText;
+	}
+
 	void setCursorChangedCallback(const std::function<void(CursorState state)>& func)
 	{
 		if (mText) mText->setCursorChangedCallback(func);

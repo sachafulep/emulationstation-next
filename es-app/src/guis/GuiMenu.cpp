@@ -1060,6 +1060,21 @@ void GuiMenu::openDeveloperSettings()
 
 	s->addGroup(_("USER INTERFACE"));
 
+	// systems view style (carousel vs. list)
+	auto systemview_style = std::make_shared<OptionListComponent<std::string>>(mWindow, _("SYSTEMS VIEW STYLE"), false);
+	systemview_style->add(_("CAROUSEL"), "carousel", Settings::getInstance()->getString("SystemViewStyle") != "list");
+	systemview_style->add(_("LIST"), "list", Settings::getInstance()->getString("SystemViewStyle") == "list");
+	s->addWithLabel(_("SYSTEMS VIEW STYLE"), systemview_style);
+	s->addSaveFunc([systemview_style, window]
+	{
+		bool needReload = Settings::getInstance()->getString("SystemViewStyle") != systemview_style->getSelected();
+
+		Settings::getInstance()->setString("SystemViewStyle", systemview_style->getSelected());
+
+		if (needReload)
+			ViewController::get()->reloadAll(window);
+	});
+
 	// carousel transition option
 	auto move_carousel = std::make_shared<SwitchComponent>(mWindow);
 	move_carousel->setState(Settings::getInstance()->getBool("MoveCarousel"));

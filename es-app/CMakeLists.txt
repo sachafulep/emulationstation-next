@@ -127,6 +127,7 @@ set(ES_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedContainer.h	
 	${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/GameNameFormatter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/SystemView.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/views/SystemViewListStyle.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/ViewController.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/UIModeController.h
 
@@ -234,6 +235,7 @@ set(ES_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedContainer.cpp	
 	${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/GameNameFormatter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/SystemView.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/views/SystemViewListStyle.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/views/ViewController.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/UIModeController.cpp
 

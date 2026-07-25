@@ -11,6 +11,7 @@
 #include "components/CarouselComponent.h"
 #include "components/TextListComponent.h"
 #include "components/ImageGridComponent.h"
+#include "views/SystemViewListStyle.h"
 
 #include <memory>
 #include <functional>
@@ -107,6 +108,9 @@ private:
 
 	TextComponent						mSystemInfo;
 
+	// Visual chrome for SystemViewStyle == "list" (text-list styling + custom help pills).
+	SystemViewListStyle					mListStyle;
+
 	std::vector<GuiComponent*>			mStaticBackgrounds;
 	std::vector<SystemViewData>			mEntries;
 
@@ -116,9 +120,10 @@ private:
 	float			mExtrasFadeMove;
 	int				mExtrasFadeOldCursor;
 
-	bool			mViewNeedsReload;		
+	bool			mViewNeedsReload;
 	bool			mDisable;
 	bool			mScreensaverActive;
+	bool			mSystemViewListMode;
 
 	MultiStateInput mYButton;
 

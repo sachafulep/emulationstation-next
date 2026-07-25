@@ -1289,7 +1289,10 @@ std::vector<HelpPrompt> ViewController::getHelpPrompts()
 
 	prompts = mCurrentView->getHelpPrompts();
 
-	if (!UIModeController::getInstance()->isUIModeKid())
+	// A view returning zero prompts (e.g. SystemView's list mode, which draws its own
+	// bottom-left indicator) means it wants the whole help bar suppressed - respect that
+	// instead of still appending the global "MENU" hint on top of it.
+	if (!prompts.empty() && !UIModeController::getInstance()->isUIModeKid())
 		prompts.push_back(HelpPrompt("start", _("MENU"), [&] { mWindow->pushGui(new GuiMenu(mWindow)); }));
 
 	return prompts;

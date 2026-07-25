@@ -9,6 +9,7 @@
 #include "Settings.h"
 #include "SystemData.h"
 #include "Window.h"
+#include "utils/StringUtil.h"
 #include "LocaleES.h"
 #include "ApiSystem.h"
 #include "SystemConf.h"
@@ -31,7 +32,8 @@
 
 SystemView::SystemView(Window* window) : GuiComponent(window),
 	mViewNeedsReload(true),
-	mSystemInfo(window, _("SYSTEM INFO"), Font::get(FONT_SIZE_SMALL), 0x33333300, ALIGN_CENTER), mYButton("y")
+	mSystemInfo(window, _("SYSTEM INFO"), Font::get(FONT_SIZE_SMALL), 0x33333300, ALIGN_CENTER),
+	mListStyle(window), mYButton("y")
 {
 	mExtraTransitionSpeed = 500.0f;
 	mExtraTransitionHorizontal = false;
@@ -42,6 +44,7 @@ SystemView::SystemView(Window* window) : GuiComponent(window),
 	mExtrasFadeMove = 0.0f;
 	mScreensaverActive = false;
 	mDisable = false;
+	mSystemViewListMode = false;
 	mLastCursor = 0;
 	mExtrasFadeOldCursor = -1;
 
@@ -138,8 +141,11 @@ void SystemView::loadExtras(SystemData* system)
 		it->backgroundExtras.clear();
 	}
 
-	// make background extras
-	auto extras = ThemeData::makeExtras(system->getTheme(), "system", mWindow);
+	// List mode never renders background extras - skip building them entirely.
+	std::vector<GuiComponent*> extras;
+	if (!mSystemViewListMode)
+		extras = ThemeData::makeExtras(system->getTheme(), "system", mWindow);
+
 	for (auto extra : extras)
 	{
 		if (extra->isKindOf<VideoComponent>())
@@ -210,7 +216,8 @@ void SystemView::populate()
 
 		if (system->isVisible())
 		{
-			mCarousel.add(system->getName(), system, true);
+			std::string displayName = system->getFullName().empty() ? system->getName() : system->getFullName();
+			mCarousel.add(Utils::String::toCapitalized(displayName), system, true);
 			loadExtras(system);
 
 			auto carousel = mCarousel.asCarousel();
@@ -606,6 +613,9 @@ void SystemView::update(int deltaTime)
 	mCarousel.update(deltaTime);
 	mSystemInfo.update(deltaTime);
 
+	if (mSystemViewListMode)
+		mListStyle.update(deltaTime);
+
 	for (auto sb : mStaticBackgrounds)
 		sb->update(deltaTime);
 
@@ -863,6 +873,14 @@ void SystemView::render(const Transform4x4f& parentTrans)
 	if (!Renderer::isVisibleOnScreen(rect))
 		return;
 
+	if (mSystemViewListMode)
+	{
+		mListStyle.renderBackground(trans, Vector2f(mSize.x(), mSize.y()));
+		renderCarousel(trans);
+		mListStyle.renderChrome(trans);
+		return;
+	}
+
 	auto carouselZindex = mCarousel.getZIndex();
 	auto systemInfoZIndex = mSystemInfo.getZIndex();
 	auto minMax = std::minmax(carouselZindex, systemInfoZIndex);
@@ -889,6 +907,10 @@ void SystemView::render(const Transform4x4f& parentTrans)
 
 std::vector<HelpPrompt> SystemView::getHelpPrompts()
 {
+	// The list view draws its own bottom-left power/sleep pill instead of the standard help bar.
+	if (mSystemViewListMode)
+		return std::vector<HelpPrompt>();
+
 	std::vector<HelpPrompt> prompts = mCarousel.getHelpPrompts();
 
 	prompts.push_back(HelpPrompt(BUTTON_OK, _("SELECT"), [&] {ViewController::get()->goToGameList(getSelected()); }));
@@ -943,6 +965,36 @@ void  SystemView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 {
 	LOG(LogDebug) << "SystemView::getViewElements()";
+
+	if (Settings::getInstance()->getString("SystemViewStyle") == "list")
+	{
+		if (!mCarousel.isTextList())
+		{
+			auto textListNative = new TextListComponent<SystemData*>(mWindow);
+			textListNative->setCursorChangedCallback([this](CursorState state) { onCursorChanged(state); });
+			mCarousel.attach(textListNative);
+		}
+
+		Vector2f listPosition, listSize;
+		mListStyle.configure(mCarousel.asTextList(), Vector2f(mSize.x(), mSize.y()), listPosition, listSize);
+
+		mCarousel.setZIndex(40);
+		mCarousel.setDefaultZIndex(40);
+		mCarousel.setSize(listSize.x(), listSize.y());
+		mCarousel.setPosition(listPosition.x(), listPosition.y());
+
+		mSystemInfo.setOpacity(0);
+
+		for (auto sb : mStaticBackgrounds)
+			delete sb;
+		mStaticBackgrounds.clear();
+
+		mSystemViewListMode = true;
+		mViewNeedsReload = false;
+		return;
+	}
+
+	mSystemViewListMode = false;
 
 	const ThemeData::ThemeElement* textListElem = theme->getElement("system", "textlist", "textlist");
 	if (textListElem)

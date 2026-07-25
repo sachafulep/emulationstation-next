@@ -1,0 +1,58 @@
+#pragma once
+#ifndef ES_CORE_COMPONENTS_PILL_HELP_BAR_COMPONENT_H
+#define ES_CORE_COMPONENTS_PILL_HELP_BAR_COMPONENT_H
+
+#include "components/TextComponent.h"
+#include "components/PillChipComponent.h"
+#include "components/PillRowComponent.h"
+#include "components/BatteryIconComponent.h"
+#include "components/NetworkIconComponent.h"
+
+class Window;
+
+// A view-agnostic replacement for the standard help bar: a bottom-left "POWER / SLEEP" pill, a
+// bottom-right "(A) OPEN" pill, and a top-right battery/network status pill, all in the same
+// grey-pill house style. Any view can own one and drop it in - it only needs a screen size to
+// lay itself out and a transform to render.
+class PillHelpBarComponent
+{
+public:
+	PillHelpBarComponent(Window* window);
+
+	// Lays out all three pills for the given screen size. Returns (via safeAreaPosition/
+	// safeAreaSize) the content box above the bottom pills, so the caller can keep its own
+	// content from rendering behind them.
+	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize);
+
+	void update(int deltaTime);
+	void render(const Transform4x4f& trans);
+
+private:
+	// Lays out the bottom-left pill; returns its top edge, needed to align the bottom-right pill
+	// and to compute the safe area.
+	float layoutPowerSleepPill(const Vector2f& screenSize);
+	void layoutOpenPill(const Vector2f& screenSize, float pillTop);
+	void layoutBatteryPill(const Vector2f& screenSize);
+
+	// The battery/network icon components hide themselves when no real battery/network
+	// connection is detected. Forces them visible with placeholder icons so they can be seen on
+	// hardware/VMs without one - remove once testing is done.
+	void applyTemporaryTestOverride(float batteryIconSize, float networkIconSize);
+
+	// Bottom-left "POWER / SLEEP" pill.
+	PillChipComponent mPowerChip;
+	TextComponent mHelpSleepText;
+	PillRowComponent mPowerSleepRow;
+
+	// Bottom-right "(A) OPEN" pill.
+	PillChipComponent mButtonChip;
+	TextComponent mHelpOpenText;
+	PillRowComponent mOpenRow;
+
+	// Top-right battery/network indicator pill.
+	PillRowComponent mBatteryRow;
+	NetworkIconComponent mNetworkIcon;
+	BatteryIconComponent mBatteryIcon;
+};
+
+#endif // ES_CORE_COMPONENTS_PILL_HELP_BAR_COMPONENT_H

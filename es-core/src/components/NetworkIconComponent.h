@@ -21,7 +21,11 @@ public:
 	void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
 	void OnWatcherChanged(IWatcher* component) override;
-	
+
+	// Icon paths are normally only populated via applyTheme() - this lets code-driven UIs
+	// (that never call applyTheme) supply a default icon directly.
+	inline void setDefaultIcon(const std::string& path) { mNetworkIcon = path; }
+
 private:
 	bool mConnected;
 	bool mPlaneMode;
