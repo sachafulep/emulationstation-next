@@ -13,7 +13,7 @@
 #include "TextToSpeech.h"
 
 BasicGameListView::BasicGameListView(Window* window, FolderData* root)
-	: ISimpleGameListView(window, root), mList(window)
+	: ISimpleGameListView(window, root), mList(window), mListStyle(window), mGameListPillMode(false)
 {
 	mList.longMouseClick += this;
 
@@ -41,9 +41,70 @@ void BasicGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 {
 	ISimpleGameListView::onThemeChanged(theme);
 	using namespace ThemeFlags;
-	mList.applyTheme(theme, getName(), "gamelist", ALL);
+
+	// Detailed/VideoGameListView reuse this method for their own theming - the pill style
+	// only applies to the plain "basic" list, not their extra metadata/art panels.
+	mGameListPillMode = Settings::getInstance()->getString("SystemViewStyle") == "list"
+		&& typeid(*this) == typeid(BasicGameListView);
+
+	if (mGameListPillMode)
+	{
+		removeChild(&mHeaderText);
+		removeChild(&mHeaderImage);
+		removeChild(&mBackground);
+		removeChild(&mFolderPath);
+		for (auto extra : mThemeExtras)
+			removeChild(extra);
+
+		Vector2f listPosition, listSize;
+		mListStyle.configure(&mList, Vector2f(mSize.x(), mSize.y()), listPosition, listSize);
+		mList.setSize(listSize.x(), listSize.y());
+		mList.setPosition(listPosition.x(), listPosition.y());
+	}
+	else
+	{
+		mList.setSize(mSize.x(), mSize.y() * 0.8f);
+		mList.setPosition(0, mSize.y() * 0.2f);
+		mList.applyTheme(theme, getName(), "gamelist", ALL);
+	}
 
 	sortChildren();
+}
+
+void BasicGameListView::update(int deltaTime)
+{
+	ISimpleGameListView::update(deltaTime);
+
+	if (mGameListPillMode)
+		mListStyle.update(deltaTime);
+}
+
+void BasicGameListView::render(const Transform4x4f& parentTrans)
+{
+	if (!mGameListPillMode)
+	{
+		IGameListView::render(parentTrans);
+		return;
+	}
+
+	Transform4x4f trans = parentTrans * getTransform();
+
+	auto rect = Renderer::getScreenRect(trans, mSize);
+	if (!Renderer::isVisibleOnScreen(rect))
+		return;
+
+	mListStyle.renderBackground(trans, Vector2f(mSize.x(), mSize.y()));
+	mList.render(trans);
+	mListStyle.renderChrome(trans);
+}
+
+std::vector<HelpPrompt> BasicGameListView::getHelpPrompts()
+{
+	// The list view draws its own corner pills instead of the standard help bar.
+	if (mGameListPillMode)
+		return std::vector<HelpPrompt>();
+
+	return ISimpleGameListView::getHelpPrompts();
 }
 
 void BasicGameListView::onFileChanged(FileData* file, FileChangeType change)

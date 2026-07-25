@@ -1064,7 +1064,7 @@ void GuiMenu::openDeveloperSettings()
 	auto systemview_style = std::make_shared<OptionListComponent<std::string>>(mWindow, _("SYSTEMS VIEW STYLE"), false);
 	systemview_style->add(_("CAROUSEL"), "carousel", Settings::getInstance()->getString("SystemViewStyle") != "list");
 	systemview_style->add(_("LIST"), "list", Settings::getInstance()->getString("SystemViewStyle") == "list");
-	s->addWithLabel(_("SYSTEMS VIEW STYLE"), systemview_style);
+	s->addWithDescription(_("SYSTEMS VIEW STYLE"), _("Also changes the plain game list's look."), systemview_style);
 	s->addSaveFunc([systemview_style, window]
 	{
 		bool needReload = Settings::getInstance()->getString("SystemViewStyle") != systemview_style->getSelected();

@@ -13,9 +13,9 @@
 namespace PillMetrics
 {
 	constexpr float kOuterPillHeight = 40.0f;
-	constexpr float kFontSizeLarge = 20.0f;
-	constexpr float kFontSizeDefault = 14.0f;
-	constexpr float kFontSizeSmall = 12.0f;
+	constexpr float kFontSizeLarge = 18.0f;
+	constexpr float kFontSizeDefault = 12.0f;
+	constexpr float kFontSizeSmall = 10.0f;
 
 	// Every pill nested inside another pill (the POWER sub-pill, the A button) shares this height.
 	constexpr float kInnerPillHeight = kOuterPillHeight - 12.0f;

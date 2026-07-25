@@ -238,7 +238,7 @@ std::string GameNameFormatter::getDisplayName(FileData* fd, bool showFolderIcon,
 	if (mShowFlags == 2)
 		after.push_back(getLangFlag(LangInfo::getFlag(fd->getMetadata(MetaDataId::Language), fd->getMetadata(MetaDataId::Region))));
 
-	std::string langAfter = "  " + Utils::String::join(after, " ");
+	std::string langAfter = after.empty() ? "" : ("  " + Utils::String::join(after, " "));
 
 	if (before.size())
 	{

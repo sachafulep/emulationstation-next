@@ -4,6 +4,7 @@
 
 #include "components/TextListComponent.h"
 #include "views/gamelist/ISimpleGameListView.h"
+#include "views/gamelist/GameListPillStyle.h"
 
 class BasicGameListView : public ISimpleGameListView, public ILongMouseClickEvent
 {
@@ -22,6 +23,9 @@ public:
 	virtual void resetLastCursor() override;
 	virtual bool onMouseWheel(int delta) override;
 	virtual void onShow() override;
+	virtual void update(int deltaTime) override;
+	virtual void render(const Transform4x4f& parentTrans) override;
+	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 
 	virtual const char* getName() const override
 	{
@@ -44,6 +48,9 @@ protected:
 	virtual void addPlaceholder();
 
 	TextListComponent<FileData*> mList;
+
+	GameListPillStyle mListStyle;
+	bool mGameListPillMode;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_BASIC_GAME_LIST_VIEW_H

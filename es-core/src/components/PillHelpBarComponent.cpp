@@ -18,22 +18,26 @@ namespace
 
 PillHelpBarComponent::PillHelpBarComponent(Window* window) :
 	mPowerChip(window), mHelpSleepText(window), mPowerSleepRow(window),
+	mBackButtonChip(window), mHelpBackText(window),
 	mButtonChip(window), mHelpOpenText(window), mOpenRow(window),
 	mBatteryRow(window), mNetworkIcon(window), mBatteryIcon(window)
 {
 }
 
-void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize)
+void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, bool showBackButton)
 {
 	float pillTop = layoutPowerSleepPill(screenSize);
 	float safeTop = kListPadding;
 	float safeBottom = pillTop - kListPadding;
 
-	layoutOpenPill(screenSize, pillTop);
+	layoutOpenPill(screenSize, pillTop, showBackButton);
 	layoutBatteryPill(screenSize);
 
+	// Keep the list from running underneath the top-right battery/network pill.
+	float safeRight = Math::min(screenSize.x() - kListPadding, mBatteryRow.getPosition().x() - kListPadding);
+
 	safeAreaPosition = Vector2f(kListPadding, safeTop);
-	safeAreaSize = Vector2f(screenSize.x() - 2.0f * kListPadding, safeBottom - safeTop);
+	safeAreaSize = Vector2f(safeRight - kListPadding, safeBottom - safeTop);
 }
 
 float PillHelpBarComponent::layoutPowerSleepPill(const Vector2f& screenSize)
@@ -55,16 +59,29 @@ float PillHelpBarComponent::layoutPowerSleepPill(const Vector2f& screenSize)
 	return pillTop;
 }
 
-void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pillTop)
+void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton)
 {
 	auto buttonFont = Font::get((int)PillMetrics::kFontSizeDefault, PillMetrics::kFontPath);
+
+	if (showBackButton)
+	{
+		mBackButtonChip.setFont(buttonFont);
+		mBackButtonChip.setText("B");
+		mBackButtonChip.setColors(kPillHighlightColor, kPillChipTextColor);
+		mBackButtonChip.setFixedHeight(PillMetrics::kInnerPillHeight);
+		mBackButtonChip.setForceCircle(true);
+		mBackButtonChip.setTextOffset(Vector2f(0.4f, 0.0f)); // compensate for the glyph's uneven side-bearing
+
+		mOpenRow.addItem(mBackButtonChip);
+		mOpenRow.addLabel(mHelpBackText, kPillLightTextColor, _("BACK"));
+	}
 
 	mButtonChip.setFont(buttonFont);
 	mButtonChip.setText("A");
 	mButtonChip.setColors(kPillHighlightColor, kPillChipTextColor);
 	mButtonChip.setFixedHeight(PillMetrics::kInnerPillHeight);
 	mButtonChip.setForceCircle(true);
-	mButtonChip.setTextOffset(Vector2f(0.4f, -1.0f)); // compensate for the glyph's uneven side-bearing
+	mButtonChip.setTextOffset(Vector2f(0.4f, 0.0f)); // compensate for the glyph's uneven side-bearing
 
 	mOpenRow.addItem(mButtonChip);
 	mOpenRow.addLabel(mHelpOpenText, kPillLightTextColor, _("OPEN"));

@@ -27,7 +27,7 @@ namespace PillListStyle
 		textList->setSelectorPillMode(true);
 		textList->setSelectorPillHeight(PillMetrics::kOuterPillHeight);
 		textList->setFont(Font::get((int)PillMetrics::kFontSizeLarge, kFontPath));
-		textList->setLineSpacing(1.45f);
+		textList->setLineSpacing(1.77f);
 
 		// Debug aid for tuning row spacing/sizing - flip to true to outline each row, false when done.
 		textList->setDebugShowRowBounds(false);

@@ -21,8 +21,10 @@ public:
 
 	// Lays out all three pills for the given screen size. Returns (via safeAreaPosition/
 	// safeAreaSize) the content box above the bottom pills, so the caller can keep its own
-	// content from rendering behind them.
-	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize);
+	// content from rendering behind them. showBackButton prepends a "(B) BACK" pill before the
+	// "(A) OPEN" one in the bottom-right row - only the game list passes true for this, since
+	// system view has nothing to navigate back out of.
+	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, bool showBackButton = false);
 
 	void update(int deltaTime);
 	void render(const Transform4x4f& trans);
@@ -31,7 +33,7 @@ private:
 	// Lays out the bottom-left pill; returns its top edge, needed to align the bottom-right pill
 	// and to compute the safe area.
 	float layoutPowerSleepPill(const Vector2f& screenSize);
-	void layoutOpenPill(const Vector2f& screenSize, float pillTop);
+	void layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton);
 	void layoutBatteryPill(const Vector2f& screenSize);
 
 	// The battery/network icon components hide themselves when no real battery/network
@@ -44,7 +46,9 @@ private:
 	TextComponent mHelpSleepText;
 	PillRowComponent mPowerSleepRow;
 
-	// Bottom-right "(A) OPEN" pill.
+	// Bottom-right "(B) BACK (A) OPEN" pill - the B/BACK part only added when showBackButton.
+	PillChipComponent mBackButtonChip;
+	TextComponent mHelpBackText;
 	PillChipComponent mButtonChip;
 	TextComponent mHelpOpenText;
 	PillRowComponent mOpenRow;

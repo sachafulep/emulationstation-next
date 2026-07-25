@@ -25,6 +25,12 @@ struct TextListData
 {
 	unsigned int colorId;
 	std::shared_ptr<TextCache> textCache;
+
+	// Pill mode's ellipsis-truncated version of textCache, when the full text overflows the
+	// list's width. Rebuilt only when the available width changes.
+	std::shared_ptr<TextCache> truncatedCache;
+	float truncatedCacheWidth = -1.0f;
+
 	std::shared_ptr<GuiComponent> itemTemplate;
 };
 
@@ -91,14 +97,20 @@ public:
 	{
 		mFont = font;
 		for (auto it = mEntries.begin(); it != mEntries.end(); it++)
+		{
 			it->data.textCache.reset();
+			it->data.truncatedCache.reset();
+		}
 	}
 
 	inline void setUppercase(bool uppercase)
 	{
 		mUppercase = uppercase;
 		for (auto it = mEntries.begin(); it != mEntries.end(); it++)
+		{
 			it->data.textCache.reset();
+			it->data.truncatedCache.reset();
+		}
 	}
 
 	inline void setSelectorHeight(float selectorScale) { mSelectorHeight = selectorScale; }
@@ -124,6 +136,11 @@ public:
 	// Overrides the selector pill's auto-fit-to-text height with a fixed one (e.g. to match
 	// other pills elsewhere on screen). Pass a value < 0 to go back to auto-fitting.
 	inline void setSelectorPillHeight(float height) { mSelectorPillHeight = height; }
+
+	// In pill mode, an overflowing selected entry normally marquee-scrolls, starting
+	// immediately (no delay) rather than after the usual pause. Pass true to instead cut it
+	// off with an ellipsis and leave it static, same as the rest of the (non-selected) rows.
+	inline void setSelectorPillEllipsisMode(bool enabled) { mSelectorPillEllipsisMode = enabled; }
 
 	// Debug aid: draws an outline around every row's bounds so spacing/sizing can be tuned.
 	inline void setDebugShowRowBounds(bool enabled, unsigned int color = 0xFF0000FF)
@@ -197,6 +214,7 @@ private:
 	bool mSelectorPillMode;
 	unsigned int mSelectorPillColor;
 	float mSelectorPillHeight; // < 0 = auto-fit to text height
+	bool mSelectorPillEllipsisMode;
 	RectangleComponent mSelectorPill;
 
 	bool mDebugShowRowBounds;
@@ -204,6 +222,11 @@ private:
 
 	ScrollbarComponent mScrollbar;
 	float mCameraOffset;
+
+	// Pill mode's windowed scroll position (index of the topmost visible row). Persisted
+	// across calls instead of derived from the cursor, so the list only scrolls once the
+	// cursor would move outside the currently visible rows.
+	int mPillTopEntry;
 
 	int		  mHotRow;
 	int		  mPressedRow;
@@ -236,12 +259,14 @@ TextListComponent<T>::TextListComponent(Window* window) :
 	mSelectorPillMode = false;
 	mSelectorPillColor = 0xFFFFFFFF;
 	mSelectorPillHeight = -1.0f;
+	mSelectorPillEllipsisMode = false;
 	mDebugShowRowBounds = false;
 	mDebugRowBoundsColor = 0xFF0000FF;
 	mSelectorPill.setBorderSize(0.0f);
 	mSelectorPill.setRoundCorners(0.5f);
 
 	mCameraOffset = 0;
+	mPillTopEntry = 0;
 	mLineCount = -1;
 	mMarqueeOffset = 0;
 	mMarqueeOffset2 = 0;
@@ -391,10 +416,58 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			else
 				entry.data.textCache->setColor(color);
 
+			TextCache* activeCache = entry.data.textCache.get();
+
+			// In pill mode, overflowing non-selected entries are always truncated with an
+			// ellipsis (they can't marquee-scroll). The selected entry does the same only in
+			// ellipsis mode; otherwise it marquee-scrolls instead (see update()).
+			if (mSelectorPillMode && (i != mCursor || mSelectorPillEllipsisMode))
+			{
+				float availableWidth = mSize.x() - mHorizontalMargin * 2.0f;
+				if (availableWidth > 0.0f && activeCache->metrics.size.x() > availableWidth)
+				{
+					if (!entry.data.truncatedCache || entry.data.truncatedCacheWidth != availableWidth)
+					{
+						std::string text = mUppercase ? Utils::String::toUpper(entry.name) : entry.name;
+						const std::string abbrev = "...";
+						Vector2f abbrevSize = font->sizeText(abbrev);
+
+						std::string truncated;
+						size_t cursorPos = 0;
+						while (cursorPos < text.size())
+						{
+							size_t newCursor = Utils::String::nextCursor(text, cursorPos);
+							if (cursorPos == newCursor)
+								break;
+							cursorPos = newCursor;
+
+							std::string testText = text.substr(0, cursorPos);
+							if (font->sizeText(testText).x() + abbrevSize.x() > availableWidth)
+								break;
+
+							truncated = testText;
+						}
+						truncated += abbrev;
+
+						entry.data.truncatedCache = std::shared_ptr<TextCache>(font->buildTextCache(truncated, 0, 0, 0x000000FF));
+						entry.data.truncatedCacheWidth = availableWidth;
+					}
+
+					if (mCursor == i && mHasBonusSelectedColor)
+						entry.data.truncatedCache->setColors(color, mBonusSelectedColor);
+					else if (mHasBonusColor)
+						entry.data.truncatedCache->setColors(color, mBonusColor);
+					else
+						entry.data.truncatedCache->setColor(color);
+
+					activeCache = entry.data.truncatedCache.get();
+				}
+			}
+
 			Vector3f offset(0, y, 0);
 
 			if (mLineCount > 0 || mSelectorPillMode) // Vertical center
-				offset[1] += (int)((entrySize - entry.data.textCache->metrics.size.y()) / 2);
+				offset[1] += (int)((entrySize - activeCache->metrics.size.y()) / 2);
 
 			switch (mAlignment)
 			{
@@ -402,12 +475,12 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 				offset[0] = mHorizontalMargin;
 				break;
 			case ALIGN_CENTER:
-				offset[0] = (int)((mSize.x() - entry.data.textCache->metrics.size.x()) / 2);
+				offset[0] = (int)((mSize.x() - activeCache->metrics.size.x()) / 2);
 				if (offset[0] < mHorizontalMargin)
 					offset[0] = mHorizontalMargin;
 				break;
 			case ALIGN_RIGHT:
-				offset[0] = (mSize.x() - entry.data.textCache->metrics.size.x());
+				offset[0] = (mSize.x() - activeCache->metrics.size.x());
 				offset[0] -= mHorizontalMargin;
 				if (offset[0] < mHorizontalMargin)
 					offset[0] = mHorizontalMargin;
@@ -437,11 +510,19 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 					float padH = mFont->getSize() * 0.6f;
 					float padV = mFont->getSize() * 0.03f;
 
-					float pillW = entry.data.textCache->metrics.size.x() + padH * 2.0f;
-					float pillH = mSelectorPillHeight >= 0.0f ? mSelectorPillHeight : entry.data.textCache->metrics.size.y() + padV * 2.0f;
+					float pillW = activeCache->metrics.size.x() + padH * 2.0f;
+					float pillH = mSelectorPillHeight >= 0.0f ? mSelectorPillHeight : activeCache->metrics.size.y() + padV * 2.0f;
 
 					float pillX = offset[0] - padH;
 					float pillY = y + mSelectorOffsetY + (entrySize - pillH) / 2.0f;
+
+					// Long entries shouldn't push the highlight past the list's own bounds
+					// (e.g. behind the battery pill in the corner help bar). The list's own
+					// edge is already the safe boundary, so clamp to it directly rather than
+					// insetting further.
+					float maxPillRight = mSize.x();
+					if (pillX + pillW > maxPillRight)
+						pillW = Math::max(0.0f, maxPillRight - pillX);
 
 					mSelectorPill.setColor(mSelectorPillColor);
 					mSelectorPill.setSize(pillW, pillH);
@@ -480,7 +561,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 					mSelectorColorGradientHorizontal);
 			}
 
-			font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, getOpacity());
+			font->renderTextCacheEx(activeCache, drawTrans, mGlowSize, mGlowColor, mGlowOffset, getOpacity());
 
 			// render currently selected item text again if
 			// marquee is scrolled far enough for it to repeat
@@ -489,7 +570,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 				drawTrans = trans;
 				drawTrans.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
 
-				font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, getOpacity());
+				font->renderTextCacheEx(activeCache, drawTrans, mGlowSize, mGlowColor, mGlowOffset, getOpacity());
 			}
 		}
 
@@ -592,7 +673,7 @@ void TextListComponent<T>::update(int deltaTime)
 
 	listUpdate(deltaTime);
 
-	if (!isScrolling() && size() > 0)
+	if (!isScrolling() && size() > 0 && !(mSelectorPillMode && mSelectorPillEllipsisMode))
 	{
 		// always reset the marquee offsets
 		mMarqueeOffset = 0;
@@ -610,8 +691,11 @@ void TextListComponent<T>::update(int deltaTime)
 		{
 			// loop
 			// pixels per second ( based on nes-mini font at 1920x1080 to produce a speed of 200 )
-			const float speed = mFont->sizeText("ABCDEFGHIJKLMNOPQRSTUVWXYZ").x() * 0.247f;
-			const float delay = 3000;
+			// Pill mode scrolls at half speed, since it also starts instantly rather than easing in.
+			const float speed = (mFont->sizeText("ABCDEFGHIJKLMNOPQRSTUVWXYZ").x() * 0.247f) * (mSelectorPillMode ? 0.5f : 1.0f);
+			// Pill mode starts scrolling the instant an item is highlighted, skipping the
+			// usual pause before the first pass.
+			const float delay = mSelectorPillMode ? 0.0f : 3000.0f;
 			const float scrollLength = textLength;
 			const float returnLength = speed * 1.5f;
 			const float scrollTime = (scrollLength * 1000) / speed;
@@ -658,20 +742,47 @@ void TextListComponent<T>::updateCameraOffset()
 	auto rowHeight = getRowHeight();
 	auto totalHeight = rowHeight * mEntries.size();
 
-	// move the camera to scroll, snapping to whole rows so the centered entry
-	// stays centered and no row is ever partially cut off at the top or bottom
+	if (mSelectorPillMode)
+	{
+		// No centering - the list stays put while the cursor moves within the visible
+		// rows, and only scrolls (by however many rows are needed, normally just one) once
+		// the cursor would otherwise move off the top or bottom of the screen.
+		if (totalHeight > mSize.y() && mCursor < mEntries.size())
+		{
+			// render() always draws one extra "peek" row beyond this count (see lastEntry in
+			// render()), so that's the true number of rows visible on screen - match it here
+			// too, or the window scrolls further than necessary once it does trigger.
+			int visibleRows = (mLineCount > 0 ? mLineCount : (int)(mSize.y() / rowHeight)) + 1;
+			int maxTopEntry = Math::max(0, (int)mEntries.size() - visibleRows);
+
+			mPillTopEntry = Math::min(mPillTopEntry, maxTopEntry);
+			mPillTopEntry = Math::max(mPillTopEntry, 0);
+
+			if ((int)mCursor < mPillTopEntry)
+				mPillTopEntry = (int)mCursor;
+			else if ((int)mCursor >= mPillTopEntry + visibleRows)
+				mPillTopEntry = (int)mCursor - visibleRows + 1;
+
+			mCameraOffset = mPillTopEntry * rowHeight;
+		}
+		else
+		{
+			mPillTopEntry = 0;
+			mCameraOffset = 0;
+		}
+
+		return;
+	}
+
+	// move the camera to scroll
 	if (totalHeight > mSize.y() && mCursor < mEntries.size())
 	{
-		int visibleRows = mLineCount > 0 ? mLineCount : (int)(mSize.y() / rowHeight);
-		int maxTopEntry = Math::max(0, (int)mEntries.size() - visibleRows);
-		int topEntry = (int)mCursor - (visibleRows / 2);
+		mCameraOffset = (rowHeight * mCursor) + ((rowHeight - mSize.y()) / 2.0f);
 
-		if (topEntry < 0)
-			topEntry = 0;
-		else if (topEntry > maxTopEntry)
-			topEntry = maxTopEntry;
-
-		mCameraOffset = topEntry * rowHeight;
+		if (mCameraOffset < 0)
+			mCameraOffset = 0;
+		else if (mCameraOffset + mSize.y() > totalHeight)
+			mCameraOffset = totalHeight - mSize.y();
 	}
 	else
 		mCameraOffset = 0;
@@ -692,9 +803,15 @@ float TextListComponent<T>::getTotalRowHeight() const
 template <typename T>
 void TextListComponent<T>::onCursorChanged(const CursorState& state)
 {
-	mMarqueeOffset = 0;
-	mMarqueeOffset2 = 0;
-	mMarqueeTime = 0;
+	// onCursorChanged fires again with CURSOR_STOPPED once the key is released, even when the
+	// cursor didn't move any further that time - only reset the marquee on an actual cursor
+	// change, or a mid-scroll marquee snaps back to its start and appears to twitch.
+	if (mLastCursor != mCursor)
+	{
+		mMarqueeOffset = 0;
+		mMarqueeOffset2 = 0;
+		mMarqueeTime = 0;
+	}
 
 	mScrollbar.onCursorChanged();
 
