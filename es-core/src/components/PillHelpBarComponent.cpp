@@ -19,7 +19,7 @@ namespace
 	// true to force it visible with a placeholder icon, so it can be seen on hardware/VMs
 	// without one. Leave false for real usage, otherwise a real charging icon will get stomped
 	// by the placeholder every time the pill bar lays out.
-	constexpr bool kForcePlaceholderIcons = true;
+	constexpr bool kForcePlaceholderIcons = false;
 }
 
 PillHelpBarComponent::PillHelpBarComponent(Window* window) :
