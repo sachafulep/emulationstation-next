@@ -30,7 +30,7 @@ PillHelpBarComponent::PillHelpBarComponent(Window* window) :
 {
 }
 
-void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, bool showBackButton)
+void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton)
 {
 	float pillTop = layoutPowerSleepPill(screenSize);
 	float safeTop = kListPadding;
@@ -39,11 +39,12 @@ void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeArea
 	layoutOpenPill(screenSize, pillTop, showBackButton);
 	layoutBatteryPill(screenSize);
 
-	// Keep the list from running underneath the top-right battery/network pill.
-	float safeRight = Math::min(screenSize.x() - kListPadding, mBatteryRow.getPosition().x() - kListPadding);
-
 	safeAreaPosition = Vector2f(kListPadding, safeTop);
-	safeAreaSize = Vector2f(safeRight - kListPadding, safeBottom - safeTop);
+	safeAreaSize = Vector2f(screenSize.x() - 2.0f * kListPadding, safeBottom - safeTop);
+
+	// Only whatever sits at the same height as the top-right battery/network pill needs to
+	// avoid it - everything below has the full width to itself.
+	topRowMaxRight = mBatteryRow.getPosition().x() - kListPadding;
 }
 
 float PillHelpBarComponent::layoutPowerSleepPill(const Vector2f& screenSize)

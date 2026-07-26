@@ -20,11 +20,14 @@ public:
 	PillHelpBarComponent(Window* window);
 
 	// Lays out all three pills for the given screen size. Returns (via safeAreaPosition/
-	// safeAreaSize) the content box above the bottom pills, so the caller can keep its own
-	// content from rendering behind them. showBackButton prepends a "(B) BACK" pill before the
-	// "(A) OPEN" one in the bottom-right row - only the game list passes true for this, since
+	// safeAreaSize) the full-width content box above the bottom pills, so the caller can keep
+	// its own content from rendering behind them - this box is NOT narrowed for the top-right
+	// battery/network pill, since only whatever content sits at that same height needs to avoid
+	// it. topRowMaxRight (screen-space x) is that boundary, for the caller to apply to just the
+	// content occupying the battery pill's row. showBackButton prepends a "(B) BACK" pill before
+	// the "(A) OPEN" one in the bottom-right row - only the game list passes true for this, since
 	// system view has nothing to navigate back out of.
-	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, bool showBackButton = false);
+	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton = false);
 
 	void update(int deltaTime);
 	void render(const Transform4x4f& trans);

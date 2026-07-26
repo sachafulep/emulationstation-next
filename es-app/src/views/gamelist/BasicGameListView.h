@@ -3,8 +3,8 @@
 #define ES_APP_VIEWS_GAME_LIST_BASIC_GAME_LIST_VIEW_H
 
 #include "components/TextListComponent.h"
+#include "components/PillListChromeStyle.h"
 #include "views/gamelist/ISimpleGameListView.h"
-#include "views/gamelist/GameListPillStyle.h"
 
 class BasicGameListView : public ISimpleGameListView, public ILongMouseClickEvent
 {
@@ -49,7 +49,7 @@ protected:
 
 	TextListComponent<FileData*> mList;
 
-	GameListPillStyle mListStyle;
+	PillListChromeStyle<FileData*> mListStyle;
 	bool mGameListPillMode;
 };
 

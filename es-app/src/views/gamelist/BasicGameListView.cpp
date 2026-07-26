@@ -13,7 +13,7 @@
 #include "TextToSpeech.h"
 
 BasicGameListView::BasicGameListView(Window* window, FolderData* root)
-	: ISimpleGameListView(window, root), mList(window), mListStyle(window), mGameListPillMode(false)
+	: ISimpleGameListView(window, root), mList(window), mListStyle(window, true), mGameListPillMode(false)
 {
 	mList.longMouseClick += this;
 

@@ -11,7 +11,7 @@
 #include "components/CarouselComponent.h"
 #include "components/TextListComponent.h"
 #include "components/ImageGridComponent.h"
-#include "views/SystemViewListStyle.h"
+#include "components/PillListChromeStyle.h"
 
 #include <memory>
 #include <functional>
@@ -109,7 +109,7 @@ private:
 	TextComponent						mSystemInfo;
 
 	// Visual chrome for SystemViewStyle == "list" (text-list styling + custom help pills).
-	SystemViewListStyle					mListStyle;
+	PillListChromeStyle<SystemData*>		mListStyle;
 
 	std::vector<GuiComponent*>			mStaticBackgrounds;
 	std::vector<SystemViewData>			mEntries;

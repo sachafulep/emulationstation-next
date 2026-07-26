@@ -78,6 +78,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillRowComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillHelpBarComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillListStyle.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillListChromeStyle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillMetrics.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextComponent.h

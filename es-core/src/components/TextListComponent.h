@@ -142,6 +142,12 @@ public:
 	// off with an ellipsis and leave it static, same as the rest of the (non-selected) rows.
 	inline void setSelectorPillEllipsisMode(bool enabled) { mSelectorPillEllipsisMode = enabled; }
 
+	// Caps how far right the topmost visible row's content (text, marquee, selector pill) may
+	// extend, in this list's own local coordinate space - for when something external (e.g. a
+	// battery/network pill in a corner) shares that row's height but not the rest of the list's.
+	// Pass < 0 to remove the cap and let that row use the full list width like any other.
+	inline void setFirstRowMaxRight(float x) { mFirstRowMaxRight = x; }
+
 	// Debug aid: draws an outline around every row's bounds so spacing/sizing can be tuned.
 	inline void setDebugShowRowBounds(bool enabled, unsigned int color = 0xFF0000FF)
 	{
@@ -215,6 +221,7 @@ private:
 	unsigned int mSelectorPillColor;
 	float mSelectorPillHeight; // < 0 = auto-fit to text height
 	bool mSelectorPillEllipsisMode;
+	float mFirstRowMaxRight; // < 0 = no cap, topmost row uses full list width like any other
 	RectangleComponent mSelectorPill;
 
 	bool mDebugShowRowBounds;
@@ -260,6 +267,7 @@ TextListComponent<T>::TextListComponent(Window* window) :
 	mSelectorPillColor = 0xFFFFFFFF;
 	mSelectorPillHeight = -1.0f;
 	mSelectorPillEllipsisMode = false;
+	mFirstRowMaxRight = -1.0f;
 	mDebugShowRowBounds = false;
 	mDebugRowBoundsColor = 0xFF0000FF;
 	mSelectorPill.setBorderSize(0.0f);
@@ -423,7 +431,11 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			// ellipsis mode; otherwise it marquee-scrolls instead (see update()).
 			if (mSelectorPillMode && (i != mCursor || mSelectorPillEllipsisMode))
 			{
-				float availableWidth = mSize.x() - mHorizontalMargin * 2.0f;
+				// The topmost visible row may share its height with something external (e.g.
+				// a battery pill in a corner) - cap only that row's width; every other row
+				// gets the list's full width.
+				float rowRightBound = (i == startEntry && mFirstRowMaxRight >= 0.0f) ? mFirstRowMaxRight : mSize.x();
+				float availableWidth = rowRightBound - mHorizontalMargin * 2.0f;
 				if (availableWidth > 0.0f && activeCache->metrics.size.x() > availableWidth)
 				{
 					if (!entry.data.truncatedCache || entry.data.truncatedCacheWidth != availableWidth)
@@ -516,11 +528,11 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 					float pillX = offset[0] - padH;
 					float pillY = y + mSelectorOffsetY + (entrySize - pillH) / 2.0f;
 
-					// Long entries shouldn't push the highlight past the list's own bounds
-					// (e.g. behind the battery pill in the corner help bar). The list's own
-					// edge is already the safe boundary, so clamp to it directly rather than
-					// insetting further.
-					float maxPillRight = mSize.x();
+					// Long entries shouldn't push the highlight past the row's own bounds. For
+					// the topmost visible row that may mean stopping short of something
+					// external sharing its height (e.g. a battery pill in a corner); every
+					// other row's bound is just the list's own edge.
+					float maxPillRight = (i == startEntry && mFirstRowMaxRight >= 0.0f) ? mFirstRowMaxRight : mSize.x();
 					if (pillX + pillW > maxPillRight)
 						pillW = Math::max(0.0f, maxPillRight - pillX);
 
@@ -685,7 +697,12 @@ void TextListComponent<T>::update(int deltaTime)
 
 		// if we're not scrolling and this object's text goes outside our size, marquee it!
 		const float textLength = mFont->sizeText(name).x();
-		const float limit = mSize.x() - mHorizontalMargin * 2;
+
+		// The topmost visible row may share its height with something external (e.g. a
+		// battery pill in a corner) - cap its width the same way render() does for that row.
+		bool cursorIsTopRow = mSelectorPillMode && (int)mCursor == mPillTopEntry;
+		float rowRightBound = (cursorIsTopRow && mFirstRowMaxRight >= 0.0f) ? mFirstRowMaxRight : mSize.x();
+		const float limit = rowRightBound - mHorizontalMargin * 2;
 
 		if (textLength > limit)
 		{
