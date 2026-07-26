@@ -79,7 +79,7 @@ void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pill
 		mBackButtonChip.setColors(kPillHighlightColor, kPillChipTextColor);
 		mBackButtonChip.setFixedHeight(PillMetrics::kInnerPillHeight);
 		mBackButtonChip.setForceCircle(true);
-		mBackButtonChip.setTextOffset(Vector2f(0.4f, 0.0f)); // compensate for the glyph's uneven side-bearing
+		mBackButtonChip.setTextOffset(Vector2f(-1.0f, -1.0f)); // compensate for the glyph's uneven side-bearing
 
 		mOpenRow.addItem(mBackButtonChip);
 		mOpenRow.addLabel(mHelpBackText, kPillLightTextColor, _("BACK"));
@@ -90,7 +90,7 @@ void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pill
 	mButtonChip.setColors(kPillHighlightColor, kPillChipTextColor);
 	mButtonChip.setFixedHeight(PillMetrics::kInnerPillHeight);
 	mButtonChip.setForceCircle(true);
-	mButtonChip.setTextOffset(Vector2f(0.4f, 0.0f)); // compensate for the glyph's uneven side-bearing
+	mButtonChip.setTextOffset(Vector2f(-1.0f, -1.0f)); // compensate for the glyph's uneven side-bearing
 
 	mOpenRow.addItem(mButtonChip);
 	mOpenRow.addLabel(mHelpOpenText, kPillLightTextColor, openLabel.empty() ? _("OPEN") : openLabel);
