@@ -20,6 +20,7 @@
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "SaveStateRepository.h"
 #include "guis/GuiSaveState.h"
+#include "guis/GuiSaveStatePillView.h"
 #include "guis/GuiGamelistOptions.h"
 #include "BasicGameListView.h"
 #include "utils/Randomizer.h"
@@ -375,15 +376,19 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 	{
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
 
-		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState* state)
+		auto callback = [this, cursor](SaveState* state)
 		{
 			Sound::getFromTheme(getTheme(), getName(), "launch")->play();
 
 			LaunchGameOptions options;
 			options.saveStateInfo = state;
 			ViewController::get()->launch(cursor, options);
-		}
-		));
+		};
+
+		if (Settings::getInstance()->getString("SystemViewStyle") == "list")
+			mWindow->pushGui(new GuiSaveStatePillView(mWindow, cursor, callback));
+		else
+			mWindow->pushGui(new GuiSaveState(mWindow, cursor, callback));
 	}
 }
 
@@ -416,15 +421,19 @@ void ISimpleGameListView::launchSelectedGame()
 			if (SaveStateRepository::isEnabled(cursor) &&
 				(cursor->getCurrentGameSetting("savestates") == "1" || (cursor->getCurrentGameSetting("savestates") == "2" && cursor->getSourceFileData()->getSystem()->getSaveStateRepository()->hasSaveStates(cursor))))
 			{
-				mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState* state)
+				auto callback = [this, cursor](SaveState* state)
 				{
 					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
 
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(cursor, options);
-				}
-				));
+				};
+
+				if (Settings::getInstance()->getString("SystemViewStyle") == "list")
+					mWindow->pushGui(new GuiSaveStatePillView(mWindow, cursor, callback));
+				else
+					mWindow->pushGui(new GuiSaveState(mWindow, cursor, callback));
 			}
 			else
 			{

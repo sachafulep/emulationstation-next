@@ -80,6 +80,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillListStyle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillListChromeStyle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillMetrics.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/DotsIndicatorComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextEditComponent.h
@@ -215,6 +216,7 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillChipComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillRowComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/PillHelpBarComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/DotsIndicatorComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextEditComponent.cpp

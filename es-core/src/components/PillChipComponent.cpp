@@ -2,7 +2,7 @@
 
 PillChipComponent::PillChipComponent(Window* window) : GuiComponent(window),
 	mShape(window), mText(window),
-	mFixedHeight(0.0f), mForceCircle(false), mTextOffset(Vector2f::Zero())
+	mFixedHeight(0.0f), mHorizontalPadding(8.0f), mForceCircle(false), mTextOffset(Vector2f::Zero())
 {
 	mShape.setBorderSize(0.0f);
 	mShape.setRoundCorners(0.5f);
@@ -36,6 +36,12 @@ void PillChipComponent::setFixedHeight(float height)
 	relayout();
 }
 
+void PillChipComponent::setHorizontalPadding(float padding)
+{
+	mHorizontalPadding = padding;
+	relayout();
+}
+
 void PillChipComponent::setForceCircle(bool enabled)
 {
 	mForceCircle = enabled;
@@ -54,9 +60,8 @@ void PillChipComponent::relayout()
 	if (font == nullptr)
 		return;
 
-	float horizontalPadding = 8.0f;
 	Vector2f textSize = mText.getSize();
-	float width = mForceCircle ? mFixedHeight : textSize.x() + horizontalPadding * 2.0f;
+	float width = mForceCircle ? mFixedHeight : textSize.x() + mHorizontalPadding * 2.0f;
 	Vector2f shapeSize(width, mFixedHeight);
 
 	mShape.setSize(shapeSize);

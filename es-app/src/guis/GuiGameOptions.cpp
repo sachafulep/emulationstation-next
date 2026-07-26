@@ -10,6 +10,7 @@
 #include "FileSorts.h"
 #include "GuiMetaDataEd.h"
 #include "SystemData.h"
+#include "Settings.h"
 #include "LocaleES.h"
 #include "guis/GuiMenu.h"
 #include "guis/GuiMsgBox.h"
@@ -27,6 +28,7 @@
 #include "guis/GuiGameScraper.h"
 #include "SaveStateRepository.h"
 #include "guis/GuiSaveState.h"
+#include "guis/GuiSaveStatePillView.h"
 #include "SystemConf.h"
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),
@@ -149,12 +151,17 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		{
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
-				mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState* state)
+				auto callback = [this, game](SaveState* state)
 				{
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(game, options);
-				}));
+				};
+
+				if (Settings::getInstance()->getString("SystemViewStyle") == "list")
+					mWindow->pushGui(new GuiSaveStatePillView(mWindow, game, callback));
+				else
+					mWindow->pushGui(new GuiSaveState(mWindow, game, callback));
 
 				this->close();
 			});

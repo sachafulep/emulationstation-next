@@ -26,8 +26,10 @@ public:
 	// it. topRowMaxRight (screen-space x) is that boundary, for the caller to apply to just the
 	// content occupying the battery pill's row. showBackButton prepends a "(B) BACK" pill before
 	// the "(A) OPEN" one in the bottom-right row - only the game list passes true for this, since
-	// system view has nothing to navigate back out of.
-	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton = false);
+	// system view has nothing to navigate back out of. openLabel overrides the "(A)" pill's label
+	// (default "OPEN") for views where that word doesn't fit the action - e.g. a save-state screen
+	// wants "OKAY" instead.
+	void layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton = false, const std::string& openLabel = std::string());
 
 	void update(int deltaTime);
 	void render(const Transform4x4f& trans);
@@ -36,7 +38,7 @@ private:
 	// Lays out the bottom-left pill; returns its top edge, needed to align the bottom-right pill
 	// and to compute the safe area.
 	float layoutPowerSleepPill(const Vector2f& screenSize);
-	void layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton);
+	void layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton, const std::string& openLabel);
 	void layoutBatteryPill(const Vector2f& screenSize);
 
 	// Forces the battery icon to a visible placeholder, ignoring real detected state. Only

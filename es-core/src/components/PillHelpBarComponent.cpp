@@ -30,7 +30,7 @@ PillHelpBarComponent::PillHelpBarComponent(Window* window) :
 {
 }
 
-void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton)
+void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton, const std::string& openLabel)
 {
 	mScreenSize = screenSize;
 
@@ -38,7 +38,7 @@ void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeArea
 	float safeTop = kListPadding;
 	float safeBottom = pillTop - kListPadding;
 
-	layoutOpenPill(screenSize, pillTop, showBackButton);
+	layoutOpenPill(screenSize, pillTop, showBackButton, openLabel);
 	layoutBatteryPill(screenSize);
 
 	safeAreaPosition = Vector2f(kListPadding, safeTop);
@@ -68,7 +68,7 @@ float PillHelpBarComponent::layoutPowerSleepPill(const Vector2f& screenSize)
 	return pillTop;
 }
 
-void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton)
+void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton, const std::string& openLabel)
 {
 	auto buttonFont = Font::get((int)PillMetrics::kFontSizeDefault, PillMetrics::kFontPath);
 
@@ -93,7 +93,7 @@ void PillHelpBarComponent::layoutOpenPill(const Vector2f& screenSize, float pill
 	mButtonChip.setTextOffset(Vector2f(0.4f, 0.0f)); // compensate for the glyph's uneven side-bearing
 
 	mOpenRow.addItem(mButtonChip);
-	mOpenRow.addLabel(mHelpOpenText, kPillLightTextColor, _("OPEN"));
+	mOpenRow.addLabel(mHelpOpenText, kPillLightTextColor, openLabel.empty() ? _("OPEN") : openLabel);
 	mOpenRow.layout();
 	mOpenRow.setRightEdge(screenSize.x() - kListPadding, pillTop); // same baseline as the power/sleep pill
 }

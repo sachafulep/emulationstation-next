@@ -22,6 +22,12 @@ public:
 	void setText(const std::string& text);
 	void setFixedHeight(float height);
 
+	// Horizontal padding applied on each side of the text, between the text and the shape's
+	// rounded edge. Defaults to 8px (the house chips' tuned value) - override to match a
+	// different pill's own padding, e.g. a font-size-relative amount to match a pill list's
+	// selector pill.
+	void setHorizontalPadding(float padding);
+
 	// Forces the shape to a perfect circle (width == height) instead of auto-fitting the text's
 	// own width - for single-glyph chips like the "A" button, where a pill shape looks wrong.
 	void setForceCircle(bool enabled);
@@ -40,6 +46,7 @@ private:
 	TextComponent mText;
 
 	float mFixedHeight;
+	float mHorizontalPadding;
 	bool mForceCircle;
 	Vector2f mTextOffset;
 };
