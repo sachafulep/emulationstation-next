@@ -17,7 +17,7 @@ namespace
 	constexpr float kActionListWidth = 480.0f;
 	// Dots sit just above the help bar's safe area (i.e. above the bottom corner pills):
 	// dot diameter (8) + a comfortable gap above the safe area's bottom edge.
-	constexpr float kDotsSafeGap = 24.0f;
+	constexpr float kDotsSafeGap = 10.0f;
 	constexpr unsigned int kOverlayColor = 0x000000A0;
 }
 
