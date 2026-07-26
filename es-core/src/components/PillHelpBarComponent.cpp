@@ -15,23 +15,25 @@ namespace
 
 	constexpr float kListPadding = 12.0f;
 
-	// The battery/network icon components hide themselves when no real battery/network
-	// connection is detected. Flip this to true to force them visible with placeholder icons,
-	// so they can be seen on hardware/VMs without one. Leave false for real usage, otherwise a
-	// real charging icon will get stomped by the placeholder every time the pill bar lays out.
-	constexpr bool kForcePlaceholderIcons = false;
+	// The battery icon component hides itself when no real battery is detected. Flip this to
+	// true to force it visible with a placeholder icon, so it can be seen on hardware/VMs
+	// without one. Leave false for real usage, otherwise a real charging icon will get stomped
+	// by the placeholder every time the pill bar lays out.
+	constexpr bool kForcePlaceholderIcons = true;
 }
 
 PillHelpBarComponent::PillHelpBarComponent(Window* window) :
 	mPowerChip(window), mHelpSleepText(window), mPowerSleepRow(window),
 	mBackButtonChip(window), mHelpBackText(window),
 	mButtonChip(window), mHelpOpenText(window), mOpenRow(window),
-	mBatteryRow(window), mNetworkIcon(window), mBatteryIcon(window)
+	mBatteryRow(window, kBatteryRowEdgePadding, kBatteryRowEdgePadding), mNetworkIcon(window), mBatteryIcon(window)
 {
 }
 
 void PillHelpBarComponent::layout(const Vector2f& screenSize, Vector2f& safeAreaPosition, Vector2f& safeAreaSize, float& topRowMaxRight, bool showBackButton)
 {
+	mScreenSize = screenSize;
+
 	float pillTop = layoutPowerSleepPill(screenSize);
 	float safeTop = kListPadding;
 	float safeBottom = pillTop - kListPadding;
@@ -105,25 +107,26 @@ void PillHelpBarComponent::layoutBatteryPill(const Vector2f& screenSize)
 
 	mBatteryRow.addIcon(mNetworkIcon, kPillHighlightColor, Vector2f(networkIconSize, networkIconSize));
 	mBatteryRow.addIcon(mBatteryIcon, kPillHighlightColor, Vector2f(batteryIconSize, batteryIconSize));
-	mBatteryRow.layout();
-	mBatteryRow.setRightEdge(screenSize.x() - kListPadding, kListPadding);
 
+	// Both icons only know their real visibility/size once update() has run at least once (each
+	// starts out at whatever its own constructor left it at) - layout() has to see that settled
+	// state, so it must run after these, not before.
 	mNetworkIcon.update(0);
 	mBatteryIcon.update(0);
 
 	if (kForcePlaceholderIcons)
-		applyTemporaryTestOverride(batteryIconSize, networkIconSize);
+		applyTemporaryTestOverride(batteryIconSize);
+
+	mBatteryRow.layout();
+	mBatteryRow.setRightEdge(screenSize.x() - kListPadding, kListPadding);
 }
 
-void PillHelpBarComponent::applyTemporaryTestOverride(float batteryIconSize, float networkIconSize)
+void PillHelpBarComponent::applyTemporaryTestOverride(float batteryIconSize)
 {
 	mBatteryIcon.setVisible(true);
 	mBatteryIcon.setImage(ResourceManager::getInstance()->getResourcePath(":/battery/75.svg"), false, MaxSizeInfo(batteryIconSize, batteryIconSize));
-	mNetworkIcon.setVisible(true);
-	mNetworkIcon.setImage(ResourceManager::getInstance()->getResourcePath(kNetworkIconPath), false, MaxSizeInfo(networkIconSize, networkIconSize));
 
-	// Re-assert once more since the lines above swapped in a (possibly still loading) image.
-	mNetworkIcon.setSize(networkIconSize, networkIconSize);
+	// Re-assert once more since the line above swapped in a (possibly still loading) image.
 	mBatteryIcon.setSize(batteryIconSize, batteryIconSize);
 }
 
@@ -131,6 +134,12 @@ void PillHelpBarComponent::update(int deltaTime)
 {
 	mNetworkIcon.update(deltaTime);
 	mBatteryIcon.update(deltaTime);
+
+	// Re-flow every frame, not just at layout() time: either icon can flip visible/hidden well
+	// after the initial layout (wifi connecting, a battery being detected asynchronously), and
+	// layout() is the only thing that knows how to size/position around that.
+	mBatteryRow.layout();
+	mBatteryRow.setRightEdge(mScreenSize.x() - kListPadding, kListPadding);
 }
 
 void PillHelpBarComponent::render(const Transform4x4f& trans)

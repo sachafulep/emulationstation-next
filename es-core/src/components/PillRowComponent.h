@@ -17,7 +17,12 @@
 class PillRowComponent : public GuiComponent
 {
 public:
+	// edgePaddingLeft/Right default to PillMetrics' house values (tuned for a chip-then-label
+	// row, where the round chip sits closer to the pill's rounded corner than the text on the
+	// far side needs to). Pass explicit equal values for rows with more uniform content (e.g.
+	// icon-only rows), where that asymmetry would otherwise read as off-center.
 	PillRowComponent(Window* window);
+	PillRowComponent(Window* window, float edgePaddingLeft, float edgePaddingRight);
 
 	// Appends an item to the row, left to right.
 	void addItem(GuiComponent& item);
@@ -51,6 +56,8 @@ private:
 
 	std::vector<GuiComponent*> mItems;
 	std::shared_ptr<Font> mDefaultFont;
+	float mEdgePaddingLeft;
+	float mEdgePaddingRight;
 };
 
 #endif // ES_CORE_COMPONENTS_PILL_ROW_COMPONENT_H

@@ -39,9 +39,14 @@ private:
 	void layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton);
 	void layoutBatteryPill(const Vector2f& screenSize);
 
-	// Forces the battery/network icons to visible placeholders, ignoring real detected state.
-	// Only called when kForcePlaceholderIcons (PillHelpBarComponent.cpp) is set to true.
-	void applyTemporaryTestOverride(float batteryIconSize, float networkIconSize);
+	// Forces the battery icon to a visible placeholder, ignoring real detected state. Only
+	// called when kForcePlaceholderIcons (PillHelpBarComponent.cpp) is set to true.
+	void applyTemporaryTestOverride(float batteryIconSize);
+
+	// The battery/network row is icon-only (no chip/text), so unlike the other two rows it uses
+	// symmetric edge padding - otherwise a single visible icon (with the other one hidden) reads
+	// as off-center within the pill.
+	static constexpr float kBatteryRowEdgePadding = 10.0f;
 
 	// Bottom-left "POWER / SLEEP" pill.
 	PillChipComponent mPowerChip;
@@ -59,6 +64,11 @@ private:
 	PillRowComponent mBatteryRow;
 	NetworkIconComponent mNetworkIcon;
 	BatteryIconComponent mBatteryIcon;
+
+	// Remembered from the last layout() call so update() can re-flow mBatteryRow every frame -
+	// its icons can flip visible/hidden well after layout() last ran (wifi connecting, a
+	// battery being detected), and nothing else would ever reposition the row to notice.
+	Vector2f mScreenSize;
 };
 
 #endif // ES_CORE_COMPONENTS_PILL_HELP_BAR_COMPONENT_H

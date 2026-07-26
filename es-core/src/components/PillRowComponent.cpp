@@ -6,8 +6,13 @@ namespace
 	constexpr float kItemGap = 8.0f;
 }
 
-PillRowComponent::PillRowComponent(Window* window) : GuiComponent(window),
-	mBackground(window)
+PillRowComponent::PillRowComponent(Window* window) :
+	PillRowComponent(window, PillMetrics::kRowEdgePaddingLeft, PillMetrics::kRowEdgePaddingRight)
+{
+}
+
+PillRowComponent::PillRowComponent(Window* window, float edgePaddingLeft, float edgePaddingRight) : GuiComponent(window),
+	mBackground(window), mEdgePaddingLeft(edgePaddingLeft), mEdgePaddingRight(edgePaddingRight)
 {
 	mBackground.setBorderSize(0.0f);
 	mBackground.setRoundCorners(0.5f);
@@ -54,19 +59,27 @@ void PillRowComponent::layout()
 {
 	float height = PillMetrics::kOuterPillHeight;
 
-	float x = PillMetrics::kRowEdgePaddingLeft;
+	float x = 0.0f;
+	bool addedVisibleItem = false;
 	for (size_t i = 0; i < mItems.size(); i++)
 	{
 		GuiComponent* item = mItems[i];
-		Vector2f size = item->getSize();
+		if (!item->isVisible())
+			continue;
 
+		if (!addedVisibleItem)
+			x = mEdgePaddingLeft;
+		else
+			x += kItemGap;
+
+		Vector2f size = item->getSize();
 		item->setPosition(x, (height - size.y()) / 2.0f);
 
 		x += size.x();
-		if (i + 1 < mItems.size())
-			x += kItemGap;
+		addedVisibleItem = true;
 	}
-	x += PillMetrics::kRowEdgePaddingRight;
+	if (addedVisibleItem)
+		x += mEdgePaddingRight;
 
 	mBackground.setSize(x, height);
 	mBackground.setPosition(0.0f, 0.0f);
