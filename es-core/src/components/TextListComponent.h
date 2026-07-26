@@ -176,6 +176,12 @@ private:
 	float getRowHeight() const;
 	float getTotalRowHeight() const;
 
+	// How many rows fit fully on screen. Pill mode has no smooth sub-row scrolling and no
+	// peek row (see render()), so this is the exact row count both render() and
+	// updateCameraOffset() must agree on - computed in exactly one place so they can't drift
+	// apart from each other again.
+	int getVisibleRowCount() const { return mLineCount > 0 ? mLineCount : (int)(mSize.y() / getRowHeight()); }
+
 	ThemeData::ThemeElement		mItemTemplate;
 
 	int mMarqueeOffset;
@@ -330,10 +336,19 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	float opacity = getOpacity() / 255.0;
 	
 	float entrySize = getRowHeight();
-	int startEntry = mCameraOffset / entrySize;
-	int screenCount = mLineCount > 0 ? mLineCount : (int)(mSize.y() / entrySize);
+	// Pill mode already tracks the exact top row as an integer (mPillTopEntry) - re-deriving
+	// it here via mCameraOffset / entrySize can truncate to one row short of the real value
+	// due to float round-trip error (mCameraOffset was itself mPillTopEntry * entrySize), which
+	// then excludes the cursor's actual row from the draw loop entirely. Use the source of
+	// truth directly instead of reversing the multiplication that produced mCameraOffset.
+	int startEntry = mSelectorPillMode ? mPillTopEntry : (int)(mCameraOffset / entrySize);
+	int screenCount = getVisibleRowCount();
+	// One extra "peek" row is always drawn past screenCount, previewing whatever's about to
+	// scroll in below the fold. It's fine for it to be partially (or, in a tight remainder,
+	// almost fully) clipped by the list's own bounds - visibleRows/getVisibleRowCount() (the
+	// scroll trigger) deliberately does NOT count it, so the cursor never lands on it.
 	int lastEntry = Math::min((int) mEntries.size(), startEntry + screenCount + 1);
-	
+
 	int listCutoff = startEntry + screenCount;
 	if (listCutoff > size())
 		listCutoff = size();
@@ -766,10 +781,10 @@ void TextListComponent<T>::updateCameraOffset()
 		// the cursor would otherwise move off the top or bottom of the screen.
 		if (totalHeight > mSize.y() && mCursor < mEntries.size())
 		{
-			// render() always draws one extra "peek" row beyond this count (see lastEntry in
-			// render()), so that's the true number of rows visible on screen - match it here
-			// too, or the window scrolls further than necessary once it does trigger.
-			int visibleRows = (mLineCount > 0 ? mLineCount : (int)(mSize.y() / rowHeight)) + 1;
+			// Must match the row count render() actually draws, peek row included (see
+			// lastEntry in render()) - the cursor can occupy that trailing peek slot without
+			// triggering a scroll, and only pushes the window once it'd go past that slot too.
+			int visibleRows = getVisibleRowCount() + 1;
 			int maxTopEntry = Math::max(0, (int)mEntries.size() - visibleRows);
 
 			mPillTopEntry = Math::min(mPillTopEntry, maxTopEntry);
