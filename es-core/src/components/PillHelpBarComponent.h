@@ -36,9 +36,8 @@ private:
 	void layoutOpenPill(const Vector2f& screenSize, float pillTop, bool showBackButton);
 	void layoutBatteryPill(const Vector2f& screenSize);
 
-	// The battery/network icon components hide themselves when no real battery/network
-	// connection is detected. Forces them visible with placeholder icons so they can be seen on
-	// hardware/VMs without one - remove once testing is done.
+	// Forces the battery/network icons to visible placeholders, ignoring real detected state.
+	// Only called when kForcePlaceholderIcons (PillHelpBarComponent.cpp) is set to true.
 	void applyTemporaryTestOverride(float batteryIconSize, float networkIconSize);
 
 	// Bottom-left "POWER / SLEEP" pill.

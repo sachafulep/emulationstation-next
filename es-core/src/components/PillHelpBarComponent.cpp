@@ -14,6 +14,12 @@ namespace
 	constexpr const char* kNetworkIconPath = ":/network.svg";
 
 	constexpr float kListPadding = 12.0f;
+
+	// The battery/network icon components hide themselves when no real battery/network
+	// connection is detected. Flip this to true to force them visible with placeholder icons,
+	// so they can be seen on hardware/VMs without one. Leave false for real usage, otherwise a
+	// real charging icon will get stomped by the placeholder every time the pill bar lays out.
+	constexpr bool kForcePlaceholderIcons = false;
 }
 
 PillHelpBarComponent::PillHelpBarComponent(Window* window) :
@@ -104,14 +110,12 @@ void PillHelpBarComponent::layoutBatteryPill(const Vector2f& screenSize)
 	mNetworkIcon.update(0);
 	mBatteryIcon.update(0);
 
-	applyTemporaryTestOverride(batteryIconSize, networkIconSize);
+	if (kForcePlaceholderIcons)
+		applyTemporaryTestOverride(batteryIconSize, networkIconSize);
 }
 
 void PillHelpBarComponent::applyTemporaryTestOverride(float batteryIconSize, float networkIconSize)
 {
-	// TEMPORARY (testing only): these icon components hide themselves when no real battery/
-	// network connection is detected. Force them visible with placeholder icons so they can
-	// be seen on hardware/VMs without one. Remove this override once testing is done.
 	mBatteryIcon.setVisible(true);
 	mBatteryIcon.setImage(ResourceManager::getInstance()->getResourcePath(":/battery/75.svg"), false, MaxSizeInfo(batteryIconSize, batteryIconSize));
 	mNetworkIcon.setVisible(true);
