@@ -64,4 +64,5 @@ CPackSourceConfig.cmake
 # local dev/test fixtures (ROMs, scratch configs) - not part of the project
 /roms/
 /es_systems.cfg
+/emulationstation.ini
 /.emulationstation-home/

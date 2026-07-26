@@ -17,7 +17,7 @@ podman run --rm \
     git submodule update --init --recursive
     mkdir -p build
     cd build
-    cmake .. -DGL=1 -DCEC=0
+    cmake .. -DGL=1 -DCEC=0 -DROCKNIX=1
     make -j"$(nproc)"
   '
 

@@ -6,9 +6,11 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE="es-next-dev"
-# The container is --rm'd on exit, so anything written under the container's
-# HOME (/root/.emulationstation - settings, keybinds, downloaded themes) is
-# normally lost. Bind-mount a host directory over it so it survives restarts.
+# The container is --rm'd on exit, so anything written under ES's user data
+# dir would normally be lost. Bind-mount a host directory over it so it
+# survives restarts. This is built with -DROCKNIX (see docker/build.sh), which
+# hardcodes that dir to /storage/.config/emulationstation instead of the usual
+# /root/.emulationstation (see es-core/src/Paths.cpp) - mount it there instead.
 ES_HOME_DIR="$REPO_ROOT/.emulationstation-home"
 
 if [ ! -x "$REPO_ROOT/emulationstation" ]; then
@@ -27,6 +29,6 @@ podman run -it --rm \
   -e DISPLAY="$DISPLAY" \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v "$REPO_ROOT:/src:Z" \
-  -v "$ES_HOME_DIR/.emulationstation:/root/.emulationstation:Z" \
+  -v "$ES_HOME_DIR/.emulationstation:/storage/.config/emulationstation:Z" \
   -w /src \
   "$IMAGE" ./emulationstation --windowed --debug --resolution 480 320 "$@"

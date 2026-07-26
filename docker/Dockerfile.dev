@@ -16,6 +16,14 @@ RUN curl -sL "https://sourceforge.net/projects/freeimage/files/Source%20Distribu
     && make -C /tmp/FreeImage -f Makefile.gnu install \
     && rm -rf /tmp/FreeImage.zip /tmp/FreeImage
 
+# The real handheld firmware ships a "wifictl" script; ApiSystem::isScriptingSupported
+# (es-app/src/ApiSystem.cpp) checks for it on disk to decide whether to show the
+# "NETWORK SETTINGS" menu entry at all. Stub it out so that check passes here too -
+# there's no real wifi hardware in this container to drive, so every subcommand just
+# reports success/empty without doing anything.
+RUN printf '#!/bin/sh\ncase "$1" in\n  has_ap_mode) exit 1 ;;\n  *) exit 0 ;;\nesac\n' > /usr/bin/wifictl \
+    && chmod +x /usr/bin/wifictl
+
 WORKDIR /src
 
 CMD ["/bin/bash"]
