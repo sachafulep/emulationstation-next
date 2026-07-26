@@ -13,7 +13,7 @@
 namespace PillMetrics
 {
 	constexpr float kOuterPillHeight = 40.0f;
-	constexpr float kFontSizeLarge = 18.0f;
+	constexpr float kFontSizeLarge = 16.0f;
 	constexpr float kFontSizeDefault = 12.0f;
 	constexpr float kFontSizeSmall = 10.0f;
 
@@ -21,7 +21,7 @@ namespace PillMetrics
 	constexpr float kInnerPillHeight = kOuterPillHeight - 12.0f;
 
 	// PillRowComponent's own baked-in defaults: house font, background color and edge padding.
-	constexpr const char* kFontPath = ":/ZenMaruGothic-Black.ttf";
+	constexpr const char* kFontPath = ":/font1.ttf";
 	constexpr unsigned int kRowBackgroundColor = 0x202420FF;
 	constexpr float kRowEdgePaddingLeft = 6.0f;
 	constexpr float kRowEdgePaddingRight = 10.0f;

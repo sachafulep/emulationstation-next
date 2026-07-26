@@ -16,7 +16,6 @@ namespace PillListStyle
 	{
 		constexpr unsigned int kHighlightColor = 0xFFFFFFFF; // text-list highlight bg
 		constexpr unsigned int kSelectedTextColor = 0x000000FF; // text-list selected text
-		constexpr const char* kFontPath = ":/ZenMaruGothic-Black.ttf";
 
 		textList->setAlignment(TextListComponent<T>::ALIGN_LEFT);
 		textList->setHorizontalMargin(16.0f);
@@ -26,8 +25,8 @@ namespace PillListStyle
 		textList->setSelectedColor(kSelectedTextColor);
 		textList->setSelectorPillMode(true);
 		textList->setSelectorPillHeight(PillMetrics::kOuterPillHeight);
-		textList->setFont(Font::get((int)PillMetrics::kFontSizeLarge, kFontPath));
-		textList->setLineSpacing(1.77f);
+		textList->setFont(Font::get((int)PillMetrics::kFontSizeLarge, PillMetrics::kFontPath));
+		textList->setLineSpacing(1.85f);
 
 		// Debug aid for tuning row spacing/sizing - flip to true to outline each row, false when done.
 		textList->setDebugShowRowBounds(false);
