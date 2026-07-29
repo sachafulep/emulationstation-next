@@ -12,7 +12,7 @@
 
 namespace
 {
-	constexpr float kMargin = 24.0f;
+	constexpr float kMargin = 12.0f;
 	constexpr float kActionListGap = 12.0f;
 	constexpr float kActionListWidth = 480.0f;
 	// Dots sit just above the help bar's safe area (i.e. above the bottom corner pills):
